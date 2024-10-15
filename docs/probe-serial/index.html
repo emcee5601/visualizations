@@ -4,19 +4,29 @@
 <input type="button" value="probe" id="serial-probe-button">
 <textarea id="text-area"></textarea>
 <script type="module">
+    const textArea = document.getElementById("text-area")
+    function logit(message) {
+        console.log(message);
+        textArea.value += message;
+    }
     function serialProbe() {
         console.log("serialProbe...");
+        if ("serial" in navigator) {
+            logit("serial supported!")
+        } else {
+            logit("no serial support :(")
+        }
         let promise = navigator.serial.getPorts().then((ports) => {
             let message = `got serial ports: ${ports.toString()}`;
-            console.log(message);
-            const textArea = document.getElementById("text-area")
-            textArea.value += message;
+            logit(message)
         })
     }
     function setupSerial() {
         const button = document.getElementById("serial-probe-button");
         button.onclick = (event) => {serialProbe();}
     }
+
+
 
     setupSerial();
 </script>
