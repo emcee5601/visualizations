@@ -1,14 +1,44 @@
 <!doctype html>
 <html lang="en">
 <body>
-<input type="button" value="probe" id="serial-probe-button">
-<textarea id="text-area"></textarea>
+<fieldset>
+    <legend>Baud Rate</legend>
+    <select id="baud-rate-selector">
+        <option value="300">300</option>
+        <option value="600">300</option>
+        <option value="1200" selected="selected">1200</option>
+        <option value="2400">2400</option>
+        <option value="9600">9600</option>
+    </select>
+</fieldset>
+<input type="button" value="request serial port" id="serial-request-button">
+<!--<input type="button" value="probe serial" id="serial-probe-button">-->
+<!--<input type="button" value="stop monitor" id="stop-monitor-button">-->
+<br/>
+<textarea id="text-area" style="width:300px;height:600px"></textarea>
 <script type="module">
     const textArea = document.getElementById("text-area")
+    const baudRateSelector = document.getElementById("baud-rate-selector")
+    let connectedPort;
+    let reader;
+    let readableStreamClosed;
+    let writer;
+    let writableStreamClosed;
+
+    function scrollToBottom(theTextArea) {
+        theTextArea.scrollTop = theTextArea.scrollHeight;
+    }
+
     function logit(message) {
         console.log(message);
-        textArea.value += message;
+        appendOutput(message);
     }
+
+    function appendOutput(message) {
+        textArea.value += message;
+        scrollToBottom(textArea);
+    }
+
     function serialProbe() {
         console.log("serialProbe...");
         if ("serial" in navigator) {
@@ -21,14 +51,90 @@
             logit(message)
         })
     }
-    function setupSerial() {
-        const button = document.getElementById("serial-probe-button");
-        button.onclick = (event) => {serialProbe();}
+
+    function serialRequest() {
+        const baudRate = baudRateSelector.value;
+        let promise = navigator.serial.requestPort().then((port) => {
+            logit(`got serial port ${port.toLocaleString()}, using baud rate ${baudRate}`)
+            port.open({baudRate:baudRate}).then((event) => {
+                logit(`opened ${event}`)
+                monitor(port);
+            })
+        })
+    }
+
+    function autodetectBaudRate() {
+        // according to the 8020 technical manual, everything is N81
+        // factory setting is 1200
+        // supported values are 300, 600, 1200, 2400, 9600
+
     }
 
 
+    function setupProbes() {
+        // const serial_probe_button = document.getElementById("serial-probe-button");
+        // serial_probe_button.onclick = (event) => {
+        //     serialProbe();
+        // }
 
-    setupSerial();
+        const serial_request_button = document.getElementById("serial-request-button");
+        serial_request_button.onclick = (event) => {
+            serialRequest();
+        }
+
+        // const stop_monitor_button = document.getElementById("stop-monitor-button");
+        // stop_monitor_button.onclick = (event) => {
+        //     stopMonitor();
+        // }
+
+    }
+
+
+    async function monitor(port) {
+        const textDecoder = new TextDecoderStream();
+        readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+        reader = textDecoder.readable.getReader();
+
+        // Listen to data coming from the serial device.
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+                reader.releaseLock();
+                break;
+            }
+            appendOutput(`${value}`);
+        }
+    }
+
+    const onConnect = function (event) {
+        console.log(`connected ${event}`)
+        connectedPort = event.target;
+        monitor(connectedPort);
+    };
+
+
+    function setupMonitor() {
+        navigator.serial.addEventListener('connect', onConnect)
+    }
+
+    async function stopMonitor() {
+        logit("stopping monitor")
+        const textEncoder = new TextEncoderStream();
+        writer = textEncoder.writable.getWriter();
+        writableStreamClosed = textEncoder.readable.pipeTo(connectedPort.writable);
+
+        reader.cancel();
+        await readableStreamClosed.catch(() => { /* Ignore */ });
+
+        await writer.close();
+        await writableStreamClosed;
+
+        await connectedPort.close();
+    }
+
+
+    setupProbes();
+    setupMonitor();
 </script>
 </body>
 </html>
