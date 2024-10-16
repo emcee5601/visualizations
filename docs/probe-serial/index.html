@@ -54,6 +54,13 @@
 
     function serialRequest() {
         const baudRate = baudRateSelector.value;
+
+        if ("serial" in navigator) {
+            logit("serial supported!")
+        } else {
+            logit("no serial support. As of this writing, web serial is only supported on desktop chrome.")
+        }
+
         let promise = navigator.serial.requestPort().then((port) => {
             logit(`got serial port ${port.toLocaleString()}, using baud rate ${baudRate}`)
             port.open({baudRate:baudRate}).then((event) => {
