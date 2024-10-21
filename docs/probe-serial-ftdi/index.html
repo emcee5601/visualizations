@@ -14,9 +14,9 @@
     document.getElementById("connect-button").onclick = (event) => {
         connect();
     }
-    
+
     const logArea = document.getElementById("log-area")
-    
+
     function log(message) {
         logArea.innerText += message;
         logArea.scrollTop = logArea.scrollHeight;
@@ -38,7 +38,7 @@
         });
 
         // get available ports (ftdi devices)
-        log(device.getAvailablePorts());
+        log(`avail ports: ${await device.getAvailablePorts()}`);
 
         // shows browser request for usb device
         let port = await device.requestNewPort();
