@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+</head>
+<body>
+<input id="connect-button" value="connect" type="button">
+<!--<script type="module" src="https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js"></script>-->
+<script type="module">
+    // import WebUSBSerialDevice from "https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js";
+    import {WebUSBSerialDevice} from "./webusb-ftdi.js";
+
+
+    document.getElementById("connect-button").onclick = (event) => {
+        connect();
+    }
+
+    async function connect() {
+        // get a device object
+        let device = new WebUSBSerialDevice({
+            overridePortSettings: true, // TODO: not supported yet, always overrides baudrate
+            // these are the defaults, this config is only used if above is true
+            baudrate: 1200,
+            bits: 8, // TODO: override not supported yet
+            stop: 1, // TODO: override not supported yet
+            parity: false, // TODO: override not supported yet
+            deviceFilters: [
+                // example filtered device; see code for more examples
+                {'vendorId': 0x0403, 'productId': 0x6001}, // 0403:6001 Future Technology Devices International, Ltd FT232 Serial (UART) IC
+            ]
+        });
+
+        // get available ports (ftdi devices)
+        console.log(device.getAvailablePorts());
+
+        // shows browser request for usb device
+        let port = await device.requestNewPort();
+
+        try {
+            // try to connect, connect receives two parameters: data callback and error callback
+            await port.connect((data) => {
+                // this is data callback, print data to console
+                console.log(data);
+                // send/repeat received data back to port after 10ms
+                // setTimeout(() => {
+                //     port.send(data);
+                // }, 10);
+            }, (error) => {
+                // called if error receiving data
+                console.warn("Error receiving data: " + error)
+            });
+        } catch (e) {
+            // called if can't get a port
+            console.warn("Error connecting to port: " + e.error)
+            console.warn(e)
+        }
+    }
+
+</script>
+</body>
+</html>
