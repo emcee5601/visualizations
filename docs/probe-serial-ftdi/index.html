@@ -4,6 +4,7 @@
 </head>
 <body>
 <input id="connect-button" value="connect" type="button">
+<textarea id="log-area"></textarea>
 <!--<script type="module" src="https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js"></script>-->
 <script type="module">
     // import WebUSBSerialDevice from "https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js";
@@ -12,6 +13,13 @@
 
     document.getElementById("connect-button").onclick = (event) => {
         connect();
+    }
+    
+    const logArea = document.getElementById("log-area")
+    
+    function log(message) {
+        logArea.innerText += message;
+        logArea.scrollTop = logArea.scrollHeight;
     }
 
     async function connect() {
@@ -30,7 +38,7 @@
         });
 
         // get available ports (ftdi devices)
-        console.log(device.getAvailablePorts());
+        log(device.getAvailablePorts());
 
         // shows browser request for usb device
         let port = await device.requestNewPort();
@@ -39,19 +47,19 @@
             // try to connect, connect receives two parameters: data callback and error callback
             await port.connect((data) => {
                 // this is data callback, print data to console
-                console.log(data);
+                log(data);
                 // send/repeat received data back to port after 10ms
                 // setTimeout(() => {
                 //     port.send(data);
                 // }, 10);
             }, (error) => {
                 // called if error receiving data
-                console.warn("Error receiving data: " + error)
+                log("Error receiving data: " + error)
             });
         } catch (e) {
             // called if can't get a port
-            console.warn("Error connecting to port: " + e.error)
-            console.warn(e)
+            log("Error connecting to port: " + e.error)
+            log(e)
         }
     }
 
