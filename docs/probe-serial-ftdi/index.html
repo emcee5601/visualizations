@@ -16,14 +16,17 @@
     }
 
     const logArea = document.getElementById("log-area")
+    const decoder = new TextDecoder();
 
     function log(message) {
-        logArea.innerText += message;
+        logArea.innerText += (message + "\n");
         logArea.scrollTop = logArea.scrollHeight;
+        console.log(message);
     }
 
     async function connect() {
         // get a device object
+        log(`connect called`);
         let device = new WebUSBSerialDevice({
             overridePortSettings: true, // TODO: not supported yet, always overrides baudrate
             // these are the defaults, this config is only used if above is true
@@ -47,7 +50,7 @@
             // try to connect, connect receives two parameters: data callback and error callback
             await port.connect((data) => {
                 // this is data callback, print data to console
-                log(data);
+                log(decoder.decode(data));
                 // send/repeat received data back to port after 10ms
                 // setTimeout(() => {
                 //     port.send(data);
