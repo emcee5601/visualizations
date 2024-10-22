@@ -4,11 +4,19 @@
 </head>
 <body>
 <input id="connect-button" value="connect" type="button">
-<textarea id="log-area"></textarea>
+<br/>
+<fieldset style="float:left">
+    <legend>Log</legend>
+    <textarea id="log-area" style="width:40vw;height:20vh"></textarea>
+</fieldset>
+<fieldset>
+    <legend>data</legend>
+    <textarea id="data-area" style="width:40vw;height:20vh"></textarea>
+</fieldset>
 <!--<script type="module" src="https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js"></script>-->
 <script type="module">
-    // import WebUSBSerialDevice from "https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js";
-    import {WebUSBSerialDevice} from "./webusb-ftdi.js";
+    import WebUSBSerialDevice from "https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js";
+    // import {WebUSBSerialDevice} from "./webusb-ftdi.js";
 
 
     document.getElementById("connect-button").onclick = (event) => {
@@ -16,15 +24,21 @@
     }
 
     const logArea = document.getElementById("log-area")
+    const dataArea = document.getElementById("data-area")
     const decoder = new TextDecoder();
 
     function log(message) {
-        logArea.innerText += (message + "\n");
+        logArea.value += (message);
         logArea.scrollTop = logArea.scrollHeight;
         console.log(message);
     }
 
-    async function connect() {
+    function logData(data) {
+        dataArea.value += data;
+        dataArea.scrollTop = dataArea.scrollHeight;
+    }
+
+    function connect() {
         // get a device object
         log(`connect called`);
         let device = new WebUSBSerialDevice({
@@ -41,29 +55,35 @@
         });
 
         // get available ports (ftdi devices)
-        log(`avail ports: ${await device.getAvailablePorts()}`);
+        device.getAvailablePorts().then((ports) => {
+            log(`available ports: ${ports}`);
+        })
 
         // shows browser request for usb device
-        let port = await device.requestNewPort();
-
-        try {
-            // try to connect, connect receives two parameters: data callback and error callback
-            await port.connect((data) => {
-                // this is data callback, print data to console
-                log(decoder.decode(data));
-                // send/repeat received data back to port after 10ms
-                // setTimeout(() => {
-                //     port.send(data);
-                // }, 10);
-            }, (error) => {
-                // called if error receiving data
-                log("Error receiving data: " + error)
-            });
-        } catch (e) {
-            // called if can't get a port
-            log("Error connecting to port: " + e.error)
-            log(e)
-        }
+        device.requestNewPort().then((port) => {
+            log(`request port got ${port}`)
+            try {
+                // try to connect, connect receives two parameters: data callback and error callback
+                port.connect((chunk) => {
+                    // this is data callback, print data to console
+                    const decodedData = decoder.decode(chunk);
+                    logData(`${decodedData}`);
+                    log(`data callback got ${chunk.length} bytes: ${decodedData}\n`)
+                    // send/repeat received data back to port after 10ms
+                    // setTimeout(() => {
+                    //     port.send(data);
+                    // }, 10);
+                }, (error) => {
+                    // called if error receiving data
+                    log("Error receiving data: " + error)
+                });
+                log('connected (probably)');
+            } catch (e) {
+                // called if can't get a port
+                log("Error connecting to port: " + e.error)
+                log(e)
+            }
+        });
     }
 
 </script>
