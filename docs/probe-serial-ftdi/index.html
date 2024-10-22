@@ -15,7 +15,8 @@
 </fieldset>
 <!--<script type="module" src="https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js"></script>-->
 <script type="module">
-    import WebUSBSerialDevice from "https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js";
+    // import WebUSBSerialDevice from "https://raw.githubusercontent.com/Shaped/webusb-ftdi/refs/heads/master/webusb-ftdi.js";
+    import {WebUSBSerialDevice} from "https://cdn.jsdelivr.net/gh/emcee5601/webusb-ftdi@2f671812f65af4c78bf8b19d043a3a15a85cdfe9/webusb-ftdi.js";
     // import {WebUSBSerialDevice} from "./webusb-ftdi.js";
 
 
@@ -40,7 +41,7 @@
 
     function connect() {
         // get a device object
-        log(`connect called`);
+        log(`connect called\n`);
         let device = new WebUSBSerialDevice({
             overridePortSettings: true, // TODO: not supported yet, always overrides baudrate
             // these are the defaults, this config is only used if above is true
