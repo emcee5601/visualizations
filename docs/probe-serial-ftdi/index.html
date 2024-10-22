@@ -39,9 +39,12 @@
         dataArea.scrollTop = dataArea.scrollHeight;
     }
 
+    
     function connect() {
         // get a device object
         log(`connect called\n`);
+
+        // from the example in https://github.com/Shaped/webusb-ftdi
         let device = new WebUSBSerialDevice({
             overridePortSettings: true, // TODO: not supported yet, always overrides baudrate
             // these are the defaults, this config is only used if above is true
